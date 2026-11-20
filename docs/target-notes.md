@@ -30,6 +30,11 @@
 
 - Can create/delete rooms: yes (admin, with token cookie) → tests can own their room data
 - Smoke flows:
+
   1. Admin login via API returns a token
   2. Admin creates a room via API → it appears on the public site
   3. Guest books an available room → booking confirmed
+
+- Verified Nov 19: POST /api/room without cookie → 401; with `Cookie: token=…` → 400 (validation)
+- Server checks auth before validation
+- Room create requires: room name, type, a value ≥ 1, a non-null field (see 400 errors)
