@@ -1,5 +1,7 @@
 import pytest
 from config.settings import ENVIRONMENTS
+import logging
+logger = logging.getLogger(__name__)
 
 
 def pytest_addoption(parser):
@@ -26,12 +28,13 @@ def app_is_up(playwright, base_url):
     try:
         response = context.get("/api/room", timeout=10000)
         status = response.status
-
     except Exception as error:
+        logger.error(f'Health check failed: cannot reach {base_url}/api/room')
         pytest.exit(
-            f'Health check failed: cannot reach {base_url} and ({error})', returncode=3)
+            f'Health check failed: cannot reach {base_url}/api/room , ({error})', returncode=3)
     finally:
         context.dispose()
-    if status != 200:
-        pytest.exit(
-            f'Health check failed: GET{base_url} returned status {status}',  returncode=3)
+        logger.info(f'Health check: GET {base_url}/api/room returned {status}')
+        if status != 200:
+            pytest.exit(
+                f'Health check failed: GET {base_url}/api/room returned status {status}',  returncode=3)
