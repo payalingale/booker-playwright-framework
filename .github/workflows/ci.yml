@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install ruff
+      - run: ruff check .
+
+  tests:
+    needs: lint            # only starts if lint passed
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      RBP_ADMIN_USER: ${{ secrets.RBP_ADMIN_USER }}
+      RBP_ADMIN_PASSWORD: ${{ secrets.RBP_ADMIN_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m playwright install --with-deps chromium
+      - run: python -m pytest -v
+      - name: Upload logs
+        if: always()       # run even when tests fail
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: logs/
+          if-no-files-found: ignore
+          
